@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Passwort zurücksetzen – Imker2Go</title>
+  <title>🔐 Passwort zurücksetzen – Imker2Go</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
@@ -18,21 +18,30 @@
     .hidden {
       display: none;
     }
+    #logs {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: gray;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
 
   <h2>🔐 Passwort zurücksetzen</h2>
+
   <div id="form-wrapper" class="hidden">
-    <p>Gib dein neues Passwort ein:</p>
+    <p>Neues Passwort eingeben:</p>
     <input type="password" id="new-password" placeholder="Neues Passwort" />
-    <button onclick="resetPassword()">Passwort speichern</button>
+    <button onclick="resetPassword()">Speichern</button>
     <p id="message"></p>
   </div>
 
   <div id="invalid-token" class="hidden">
-    <p>❌ Ungültiger oder fehlender Reset-Link.</p>
+    <p>❌ Kein gültiger Reset-Token gefunden.</p>
   </div>
+
+  <div id="logs"></div>
 
   <script>
     const supabase = supabase.createClient(
@@ -40,31 +49,45 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bXpma2xyenFweHdubmFlemdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNjA0MDQsImV4cCI6MjA2MDkzNjQwNH0.ddwLaH6leHOEa6OHBVR0yEg3F3MZFQM9Is9oj25sFPQ'
     );
 
+    const log = (msg) => {
+      document.getElementById('logs').textContent += msg + "\n";
+    };
+
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+    log('Token aus URL: ' + token);
 
     if (token) {
       supabase.auth.setSession({ access_token: token, refresh_token: token })
         .then(({ data, error }) => {
           if (error) {
             document.getElementById('invalid-token').classList.remove('hidden');
+            log('Fehler bei setSession: ' + error.message);
           } else {
             document.getElementById('form-wrapper').classList.remove('hidden');
+            log('Session gesetzt: ' + JSON.stringify(data));
           }
+        })
+        .catch(err => {
+          document.getElementById('invalid-token').classList.remove('hidden');
+          log('setSession Catch: ' + err.message);
         });
     } else {
       document.getElementById('invalid-token').classList.remove('hidden');
+      log('Kein Token gefunden');
     }
 
     async function resetPassword() {
       const newPassword = document.getElementById('new-password').value;
-      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
       const message = document.getElementById('message');
 
+      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) {
-        message.innerText = '⚠️ Fehler: ' + error.message;
+        message.textContent = '❌ Fehler: ' + error.message;
+        log('Fehler bei updateUser: ' + error.message);
       } else {
-        message.innerText = '✅ Passwort geändert! Du kannst dich jetzt in der App einloggen.';
+        message.textContent = '✅ Passwort erfolgreich geändert.';
+        log('Passwort aktualisiert: ' + JSON.stringify(data));
       }
     }
   </script>
