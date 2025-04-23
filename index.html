@@ -44,7 +44,7 @@
   <div id="logs"></div>
 
   <script>
-    const supabase = supabase.createClient(
+    const client = supabase.createClient(
       'https://etmzfklrzqpxwnnaezgb.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bXpma2xyenFweHdubmFlemdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNjA0MDQsImV4cCI6MjA2MDkzNjQwNH0.ddwLaH6leHOEa6OHBVR0yEg3F3MZFQM9Is9oj25sFPQ'
     );
@@ -58,7 +58,7 @@
     log('Token aus URL: ' + token);
 
     if (token) {
-      supabase.auth.setSession({ access_token: token, refresh_token: token })
+      client.auth.setSession({ access_token: token, refresh_token: token })
         .then(({ data, error }) => {
           if (error) {
             document.getElementById('invalid-token').classList.remove('hidden');
@@ -81,7 +81,7 @@
       const newPassword = document.getElementById('new-password').value;
       const message = document.getElementById('message');
 
-      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+      const { data, error } = await client.auth.updateUser({ password: newPassword });
       if (error) {
         message.textContent = '❌ Fehler: ' + error.message;
         log('Fehler bei updateUser: ' + error.message);
