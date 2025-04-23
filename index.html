@@ -3,94 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <title>🔐 Passwort zurücksetzen – Imker2Go</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
-    }
-    input, button {
-      margin-top: 1rem;
-      padding: 0.5rem;
-      width: 100%;
-      max-width: 300px;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f8f8f8;
+      color: #333;
+      text-align: center;
+      padding: 2rem;
     }
     .hidden {
       display: none;
     }
-    #logs {
-      margin-top: 2rem;
-      font-size: 0.85rem;
-      color: gray;
-      white-space: pre-wrap;
-    }
   </style>
 </head>
 <body>
-
-  <h2>🔐 Passwort zurücksetzen</h2>
-
-  <div id="form-wrapper" class="hidden">
-    <p>Neues Passwort eingeben:</p>
-    <input type="password" id="new-password" placeholder="Neues Passwort" />
-    <button onclick="resetPassword()">Speichern</button>
-    <p id="message"></p>
+  <div id="message">
+    <h2>🔄 Weiterleitung...</h2>
+    <p>Falls nichts passiert, öffne diesen Link manuell in deiner Imker2Go-App.</p>
   </div>
-
-  <div id="invalid-token" class="hidden">
-    <p>❌ Kein gültiger Reset-Token gefunden.</p>
-  </div>
-
-  <div id="logs"></div>
 
   <script>
-    const client = supabase.createClient(
-      'https://etmzfklrzqpxwnnaezgb.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bXpma2xyenFweHdubmFlemdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNjA0MDQsImV4cCI6MjA2MDkzNjQwNH0.ddwLaH6leHOEa6OHBVR0yEg3F3MZFQM9Is9oj25sFPQ'
-    );
-
-    const log = (msg) => {
-      document.getElementById('logs').textContent += msg + "\n";
-    };
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    log('Token aus URL: ' + token);
+    const hash = window.location.hash;
+    const token = hash.split('access_token=')[1];
 
     if (token) {
-      client.auth.setSession({ access_token: token, refresh_token: token })
-        .then(({ data, error }) => {
-          if (error) {
-            document.getElementById('invalid-token').classList.remove('hidden');
-            log('Fehler bei setSession: ' + error.message);
-          } else {
-            document.getElementById('form-wrapper').classList.remove('hidden');
-            log('Session gesetzt: ' + JSON.stringify(data));
-          }
-        })
-        .catch(err => {
-          document.getElementById('invalid-token').classList.remove('hidden');
-          log('setSession Catch: ' + err.message);
-        });
+      window.location.href = `imker2go://reset#access_token=${token}`;
     } else {
-      document.getElementById('invalid-token').classList.remove('hidden');
-      log('Kein Token gefunden');
-    }
-
-    async function resetPassword() {
-      const newPassword = document.getElementById('new-password').value;
-      const message = document.getElementById('message');
-
-      const { data, error } = await client.auth.updateUser({ password: newPassword });
-      if (error) {
-        message.textContent = '❌ Fehler: ' + error.message;
-        log('Fehler bei updateUser: ' + error.message);
-      } else {
-        message.textContent = '✅ Passwort erfolgreich geändert.';
-        log('Passwort aktualisiert: ' + JSON.stringify(data));
-      }
+      document.getElementById('message').innerHTML = `
+        <h2>❌ Fehler</h2>
+        <p>Kein gültiger Token gefunden.</p>
+      `;
     }
   </script>
-
 </body>
 </html>
